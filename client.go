@@ -1,8 +1,11 @@
 package backlog
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/pkg/errors"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -10,9 +13,6 @@ import (
 	"path"
 	"runtime"
 	"strings"
-	"context"
-	"io"
-	"encoding/json"
 )
 
 const (
@@ -34,24 +34,24 @@ type requestOption struct {
 }
 
 type Project struct {
-	Id         int `json:"id"`
+	Id         int    `json:"id"`
 	ProjectKey string `json:"projectKey"`
 	Name       string `json:"name"`
 }
 
 type Priority struct {
-	Id   int `json:"id"`
+	Id   int    `json:"id"`
 	Name string `json:"name"`
 }
 
 type IssueType struct {
-	Id        int `json:"id"`
-	ProjectId int `json:"projectId"`
+	Id        int    `json:"id"`
+	ProjectId int    `json:"projectId"`
 	Name      string `json:"name"`
 }
 
 type User struct {
-	Id     int `json:"id"`
+	Id     int    `json:"id"`
 	UserId string `json:"userId"`
 	Name   string `json:"name"`
 }
@@ -88,7 +88,7 @@ func NewClient(urlStr, apiToken string, logger *log.Logger) (*Client, error) {
 	}, nil
 }
 
-var userAgent = fmt.Sprintf("nippo_backlog/%s (%s)", version, runtime.Version())
+var userAgent = fmt.Sprintf("orisano-backlog/%s (%s)", version, runtime.Version())
 
 func (c *Client) newRequest(ctx context.Context, method, spath string, opt *requestOption) (*http.Request, error) {
 	if ctx == nil {
