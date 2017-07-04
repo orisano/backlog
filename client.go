@@ -217,7 +217,7 @@ func (c *Client) GetPriorities(ctx context.Context) ([]Priority, error) {
 }
 
 func (c *Client) GetIssueTypes(ctx context.Context, projectId int) ([]IssueType, error) {
-	spath := fmt.Sprintf("/api/v2/%d/issueTypes", projectId)
+	spath := fmt.Sprintf("/api/v2/projects/%d/issueTypes", projectId)
 	req, err := c.newRequest(ctx, "GET", spath, &requestOption{})
 	if err != nil {
 		return nil, err
