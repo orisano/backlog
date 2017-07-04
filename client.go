@@ -161,7 +161,7 @@ func (c *Client) AddIssue(ctx context.Context, projectId int, summary string, is
 
 	var out AddIssueResponse
 	decoder := json.NewDecoder(res.Body)
-	if err := decoder.Decode(out); err != nil {
+	if err := decoder.Decode(&out); err != nil {
 		return nil, err
 	}
 	return &out, nil
@@ -186,7 +186,7 @@ func (c *Client) GetProjects(ctx context.Context) ([]Project, error) {
 
 	projects := make([]Project, 0)
 	decoder := json.NewDecoder(res.Body)
-	if err := decoder.Decode(projects); err != nil {
+	if err := decoder.Decode(&projects); err != nil {
 		return nil, err
 	}
 	return projects, nil
@@ -210,7 +210,7 @@ func (c *Client) GetPriorities(ctx context.Context) ([]Priority, error) {
 
 	priorities := make([]Priority, 0)
 	decoder := json.NewDecoder(res.Body)
-	if err := decoder.Decode(priorities); err != nil {
+	if err := decoder.Decode(&priorities); err != nil {
 		return nil, err
 	}
 	return priorities, nil
@@ -234,7 +234,7 @@ func (c *Client) GetIssueTypes(ctx context.Context, projectId int) ([]IssueType,
 
 	issueTypes := make([]IssueType, 0)
 	decoder := json.NewDecoder(res.Body)
-	if err := decoder.Decode(issueTypes); err != nil {
+	if err := decoder.Decode(&issueTypes); err != nil {
 		return nil, err
 	}
 	return issueTypes, nil
@@ -258,7 +258,7 @@ func (c *Client) GetMyself(ctx context.Context) (*User, error) {
 
 	var user User
 	decoder := json.NewDecoder(res.Body)
-	if err := decoder.Decode(user); err != nil {
+	if err := decoder.Decode(&user); err != nil {
 		return nil, err
 	}
 	return &user, nil
