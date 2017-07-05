@@ -65,6 +65,10 @@ type AddIssueResponse struct {
 	IssueId int `json:"id"`
 }
 
+type AddIssueCommentResponse struct {
+	CommentId int `json:"id"`
+}
+
 func NewClient(urlStr, apiToken string, logger *log.Logger) (*Client, error) {
 	if len(apiToken) == 0 {
 		return nil, errors.New("missing token")
@@ -262,6 +266,34 @@ func (c *Client) GetMyself(ctx context.Context) (*User, error) {
 		return nil, err
 	}
 	return &user, nil
+}
+
+func (c *Client) AddIssueComment(ctx context.Context, issueId int, content string) (*AddIssueCommentResponse, error) {
+	spath := fmt.Sprintf("/api/v2/issues/%d/comments", issueId)
+	req, err := c.newRequest(ctx, "POST", spath, &requestOption{
+		body: map[string]string{
+			"content": content,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	res, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	if err := assertStatusCode(res, http.StatusCreated); err != nil {
+		return nil, err
+	}
+
+	var out AddIssueCommentResponse
+	decoder := json.NewDecoder(res.Body)
+	if err := decoder.Decode(&out); err != nil {
+		return nil, err
+	}
+	return &out, nil
 }
 
 func assertStatusCode(res *http.Response, expected int) error {
