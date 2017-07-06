@@ -146,6 +146,13 @@ func (c *Client) AddIssue(ctx context.Context, projectId int, summary string, is
 		"issueTypeId": fmt.Sprint(issueTypeId),
 		"priorityId":  fmt.Sprint(priorityId),
 	}
+
+	if opt != nil {
+		if len(opt.Description) > 0 {
+			body["description"] = opt.Description
+		}
+	}
+
 	req, err := c.newRequest(ctx, "POST", spath, &requestOption{
 		body: body,
 	})
