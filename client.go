@@ -2,7 +2,6 @@ package backlog
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"github.com/pkg/errors"
 	"io"
@@ -16,16 +15,16 @@ import (
 )
 
 const (
-	version = "0.1"
+	version = "0.2.0"
 )
 
 type Client struct {
-	URL        *url.URL
-	HTTPClient *http.Client
+	URL    *url.URL
+	client *http.Client
 
-	APIToken string
+	apiKey string
 
-	Logger *log.Logger
+	logger *log.Logger
 }
 
 type requestOption struct {
@@ -33,45 +32,9 @@ type requestOption struct {
 	body   map[string]string
 }
 
-type Project struct {
-	Id         int    `json:"id"`
-	ProjectKey string `json:"projectKey"`
-	Name       string `json:"name"`
-}
-
-type Priority struct {
-	Id   int    `json:"id"`
-	Name string `json:"name"`
-}
-
-type IssueType struct {
-	Id        int    `json:"id"`
-	ProjectId int    `json:"projectId"`
-	Name      string `json:"name"`
-}
-
-type User struct {
-	Id     int    `json:"id"`
-	UserId string `json:"userId"`
-	Name   string `json:"name"`
-}
-
-type AddIssueOption struct {
-	Description string
-	AssigneeId  int
-}
-
-type AddIssueResponse struct {
-	IssueId int `json:"id"`
-}
-
-type AddIssueCommentResponse struct {
-	CommentId int `json:"id"`
-}
-
-func NewClient(urlStr, apiToken string, logger *log.Logger) (*Client, error) {
-	if len(apiToken) == 0 {
-		return nil, errors.New("missing token")
+func NewClient(urlStr, apiKey string, logger *log.Logger) (*Client, error) {
+	if len(apiKey) == 0 {
+		return nil, errors.New("missing api key")
 	}
 	parsedURL, err := url.ParseRequestURI(urlStr)
 	if err != nil {
@@ -83,12 +46,12 @@ func NewClient(urlStr, apiToken string, logger *log.Logger) (*Client, error) {
 	}
 
 	return &Client{
-		URL:        parsedURL,
-		HTTPClient: http.DefaultClient,
+		URL:    parsedURL,
+		client: http.DefaultClient,
 
-		APIToken: apiToken,
+		apiKey: apiKey,
 
-		Logger: logger,
+		logger: logger,
 	}, nil
 }
 
@@ -122,7 +85,7 @@ func (c *Client) newRequest(ctx context.Context, method, spath string, opt *requ
 	}
 
 	values := req.URL.Query()
-	values.Add("apiKey", c.APIToken)
+	values.Add("apiKey", c.apiKey)
 	if len(opt.params) != 0 {
 		for k, v := range opt.params {
 			values.Add(k, v)
@@ -138,175 +101,9 @@ func (c *Client) newRequest(ctx context.Context, method, spath string, opt *requ
 	return req, nil
 }
 
-func (c *Client) AddIssue(ctx context.Context, projectId int, summary string, issueTypeId, priorityId int, opt *AddIssueOption) (*AddIssueResponse, error) {
-	spath := "/api/v2/issues"
-	body := map[string]string{
-		"projectId":   fmt.Sprint(projectId),
-		"summary":     summary,
-		"issueTypeId": fmt.Sprint(issueTypeId),
-		"priorityId":  fmt.Sprint(priorityId),
-	}
-
-	if opt != nil {
-		if len(opt.Description) > 0 {
-			body["description"] = opt.Description
-		}
-	}
-
-	req, err := c.newRequest(ctx, "POST", spath, &requestOption{
-		body: body,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	res, err := c.HTTPClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
-	if err := assertStatusCode(res, http.StatusCreated); err != nil {
-		return nil, err
-	}
-
-	var out AddIssueResponse
-	decoder := json.NewDecoder(res.Body)
-	if err := decoder.Decode(&out); err != nil {
-		return nil, err
-	}
-	return &out, nil
-}
-
-func (c *Client) GetProjects(ctx context.Context) ([]Project, error) {
-	spath := "/api/v2/projects"
-	req, err := c.newRequest(ctx, "GET", spath, &requestOption{})
-	if err != nil {
-		return nil, err
-	}
-
-	res, err := c.HTTPClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
-	if err := assertStatusCode(res, http.StatusOK); err != nil {
-		return nil, err
-	}
-
-	projects := make([]Project, 0)
-	decoder := json.NewDecoder(res.Body)
-	if err := decoder.Decode(&projects); err != nil {
-		return nil, err
-	}
-	return projects, nil
-}
-
-func (c *Client) GetPriorities(ctx context.Context) ([]Priority, error) {
-	spath := "/api/v2/priorities"
-	req, err := c.newRequest(ctx, "GET", spath, &requestOption{})
-	if err != nil {
-		return nil, err
-	}
-	res, err := c.HTTPClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
-	if err := assertStatusCode(res, http.StatusOK); err != nil {
-		return nil, err
-	}
-
-	priorities := make([]Priority, 0)
-	decoder := json.NewDecoder(res.Body)
-	if err := decoder.Decode(&priorities); err != nil {
-		return nil, err
-	}
-	return priorities, nil
-}
-
-func (c *Client) GetIssueTypes(ctx context.Context, projectId int) ([]IssueType, error) {
-	spath := fmt.Sprintf("/api/v2/projects/%d/issueTypes", projectId)
-	req, err := c.newRequest(ctx, "GET", spath, &requestOption{})
-	if err != nil {
-		return nil, err
-	}
-	res, err := c.HTTPClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
-	if err := assertStatusCode(res, http.StatusOK); err != nil {
-		return nil, err
-	}
-
-	issueTypes := make([]IssueType, 0)
-	decoder := json.NewDecoder(res.Body)
-	if err := decoder.Decode(&issueTypes); err != nil {
-		return nil, err
-	}
-	return issueTypes, nil
-}
-
-func (c *Client) GetMyself(ctx context.Context) (*User, error) {
-	spath := "/api/v2/users/myself"
-	req, err := c.newRequest(ctx, "GET", spath, &requestOption{})
-	if err != nil {
-		return nil, err
-	}
-	res, err := c.HTTPClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
-	if err := assertStatusCode(res, http.StatusOK); err != nil {
-		return nil, err
-	}
-
-	var user User
-	decoder := json.NewDecoder(res.Body)
-	if err := decoder.Decode(&user); err != nil {
-		return nil, err
-	}
-	return &user, nil
-}
-
-func (c *Client) AddIssueComment(ctx context.Context, issueId int, content string) (*AddIssueCommentResponse, error) {
-	spath := fmt.Sprintf("/api/v2/issues/%d/comments", issueId)
-	req, err := c.newRequest(ctx, "POST", spath, &requestOption{
-		body: map[string]string{
-			"content": content,
-		},
-	})
-	if err != nil {
-		return nil, err
-	}
-	res, err := c.HTTPClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
-	if err := assertStatusCode(res, http.StatusCreated); err != nil {
-		return nil, err
-	}
-
-	var out AddIssueCommentResponse
-	decoder := json.NewDecoder(res.Body)
-	if err := decoder.Decode(&out); err != nil {
-		return nil, err
-	}
-	return &out, nil
-}
-
 func assertStatusCode(res *http.Response, expected int) error {
 	if res.StatusCode != expected {
 		return errors.Errorf("invalid status code: %s", res.Status)
-	} else {
-		return nil
 	}
+	return nil
 }
