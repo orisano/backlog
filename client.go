@@ -2,6 +2,7 @@ package backlog
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -10,34 +11,54 @@ import (
 	"net/url"
 	"path"
 	"runtime"
-	"strings"
 
 	"github.com/pkg/errors"
 )
 
 const (
-	version = "0.2.0"
+	version = "0.3.0"
 )
 
 type Client struct {
-	URL    *url.URL
-	client *http.Client
+	baseURL    *url.URL
+	httpClient *http.Client
+	userAgent  string
 
 	apiKey string
 
 	logger *log.Logger
-
-	UserAgent string
+	debug  bool
 }
 
-type requestOption struct {
-	params map[string]string
-	body   map[string]string
+var defaultUserAgent = fmt.Sprintf("%s go-backlog/%s", runtime.Version(), version)
+
+type options struct {
+	UserAgent *string
+	Logger    *log.Logger
+	Debug     bool
 }
 
-var userAgent = fmt.Sprintf("%s go-backlog/%s", runtime.Version(), version)
+type option func(*options)
 
-func NewClient(urlStr, apiKey string, logger *log.Logger) (*Client, error) {
+func SetLogger(logger *log.Logger) option {
+	return func(opt *options) {
+		opt.Logger = logger
+	}
+}
+
+func SetUserAgent(userAgent string) option {
+	return func(opt *options) {
+		opt.UserAgent = &userAgent
+	}
+}
+
+func SetDebug(debug bool) option {
+	return func(opt *options) {
+		opt.Debug = debug
+	}
+}
+
+func NewClient(urlStr, apiKey string, opts ...option) (*Client, error) {
 	if len(apiKey) == 0 {
 		return nil, errors.New("missing api key")
 	}
@@ -45,24 +66,34 @@ func NewClient(urlStr, apiKey string, logger *log.Logger) (*Client, error) {
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to parse url: %s", urlStr)
 	}
-	var discardLogger = log.New(ioutil.Discard, "", log.LstdFlags)
+
+	var options options
+	for _, opt := range opts {
+		opt(&options)
+	}
+
+	logger := options.Logger
 	if logger == nil {
-		logger = discardLogger
+		logger = log.New(ioutil.Discard, "", log.LstdFlags|log.Lshortfile)
+	}
+	userAgent := options.UserAgent
+	if userAgent == nil {
+		userAgent = &defaultUserAgent
 	}
 
 	return &Client{
-		URL:    parsedURL,
-		client: http.DefaultClient,
+		baseURL:    parsedURL,
+		httpClient: http.DefaultClient,
+		userAgent:  *userAgent,
 
 		apiKey: apiKey,
 
 		logger: logger,
-
-		UserAgent: userAgent,
+		debug:  options.Debug,
 	}, nil
 }
 
-func (c *Client) newRequest(ctx context.Context, method, spath string, opt *requestOption) (*http.Request, error) {
+func (c *Client) newRequest(ctx context.Context, method, spath string, body io.Reader) (*http.Request, error) {
 	if ctx == nil {
 		return nil, errors.New("nil context")
 	}
@@ -72,33 +103,19 @@ func (c *Client) newRequest(ctx context.Context, method, spath string, opt *requ
 	if len(spath) == 0 {
 		return nil, errors.New("missing spath")
 	}
+	u := *c.baseURL
+	u.Path = path.Join(u.Path, spath)
 
-	u := *c.URL
-	u.Path = path.Join(c.URL.Path, spath)
+	param := u.Query()
+	param.Set("apiKey", c.apiKey)
+	u.RawQuery = param.Encode()
 
-	var r io.Reader
-	if len(opt.body) != 0 {
-		kv := make([]string, 0, len(opt.body))
-		for k, v := range opt.body {
-			kv = append(kv, fmt.Sprintf("%s=%s", k, v))
-		}
-		r = strings.NewReader(strings.Join(kv, "&"))
-	}
-	req, err := http.NewRequest(method, u.String(), r)
+	req, err := http.NewRequest(method, u.String(), body)
 	if err != nil {
 		return nil, err
 	}
 
-	values := req.URL.Query()
-	values.Add("apiKey", c.apiKey)
-	if len(opt.params) != 0 {
-		for k, v := range opt.params {
-			values.Add(k, v)
-		}
-	}
-	req.URL.RawQuery = values.Encode()
-
-	req.Header.Set("User-Agent", c.UserAgent)
+	req.Header.Set("User-Agent", c.userAgent)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	req = req.WithContext(ctx)
@@ -106,9 +123,36 @@ func (c *Client) newRequest(ctx context.Context, method, spath string, opt *requ
 	return req, nil
 }
 
-func assertStatusCode(res *http.Response, expected int) error {
-	if res.StatusCode != expected {
-		return errors.Errorf("invalid status code: %s", res.Status)
+func (c *Client) do(req *http.Request, expected int, out interface{}) error {
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != expected {
+		return errors.Errorf("unexpected status. expected %v, actual %v", expected, resp.Status)
+	}
+
+	if out != nil {
+		if err := json.NewDecoder(resp.Body).Decode(out); err != nil {
+			return errors.Wrap(err, "response decode failed")
+		}
 	}
 	return nil
+}
+
+func (c *Client) doSimple(ctx context.Context, method, spath string, body io.Reader, expected int, out interface{}) error {
+	req, err := c.newRequest(ctx, method, spath, body)
+	if err != nil {
+		return errors.Wrap(err, "request construct failed")
+	}
+	if err := c.do(req, expected, out); err != nil {
+		return errors.Wrap(err, "request failed")
+	}
+	return nil
+}
+
+func (c *Client) get(ctx context.Context, spath string, expected int, out interface{}) error {
+	return c.doSimple(ctx, http.MethodGet, spath, nil, expected, out)
 }

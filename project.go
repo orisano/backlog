@@ -2,9 +2,13 @@ package backlog
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
+	"path"
+)
+
+const (
+	projectsPath = "/api/v2/projects"
 )
 
 type Project struct {
@@ -20,49 +24,17 @@ type IssueType struct {
 }
 
 func (c *Client) GetProjects(ctx context.Context) ([]Project, error) {
-	spath := "/api/v2/projects"
-	req, err := c.newRequest(ctx, http.MethodGet, spath, &requestOption{})
-	if err != nil {
-		return nil, err
-	}
-
-	res, err := c.client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
-	if err := assertStatusCode(res, http.StatusOK); err != nil {
-		return nil, err
-	}
-
-	projects := make([]Project, 0)
-	decoder := json.NewDecoder(res.Body)
-	if err := decoder.Decode(&projects); err != nil {
+	var projects []Project
+	if err := c.get(ctx, projectsPath, http.StatusOK, &projects); err != nil {
 		return nil, err
 	}
 	return projects, nil
 }
 
 func (c *Client) GetIssueTypes(ctx context.Context, projectID int) ([]IssueType, error) {
-	spath := fmt.Sprintf("/api/v2/projects/%d/issueTypes", projectID)
-	req, err := c.newRequest(ctx, http.MethodGet, spath, &requestOption{})
-	if err != nil {
-		return nil, err
-	}
-	res, err := c.client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
-	if err := assertStatusCode(res, http.StatusOK); err != nil {
-		return nil, err
-	}
-
-	issueTypes := make([]IssueType, 0)
-	decoder := json.NewDecoder(res.Body)
-	if err := decoder.Decode(&issueTypes); err != nil {
+	spath := path.Join(projectsPath, fmt.Sprint(projectID), "issueTypes")
+	var issueTypes []IssueType
+	if err := c.get(ctx, spath, http.StatusOK, &issueTypes); err != nil {
 		return nil, err
 	}
 	return issueTypes, nil

@@ -2,8 +2,12 @@ package backlog
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
+	"path"
+)
+
+const (
+	usersPath = "/api/v2/users"
 )
 
 type User struct {
@@ -13,24 +17,9 @@ type User struct {
 }
 
 func (c *Client) GetMyself(ctx context.Context) (*User, error) {
-	spath := "/api/v2/users/myself"
-	req, err := c.newRequest(ctx, http.MethodGet, spath, &requestOption{})
-	if err != nil {
-		return nil, err
-	}
-	res, err := c.client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
-	if err := assertStatusCode(res, http.StatusOK); err != nil {
-		return nil, err
-	}
-
+	spath := path.Join(usersPath, "myself")
 	var user User
-	decoder := json.NewDecoder(res.Body)
-	if err := decoder.Decode(&user); err != nil {
+	if err := c.get(ctx, spath, http.StatusOK, &user); err != nil {
 		return nil, err
 	}
 	return &user, nil
