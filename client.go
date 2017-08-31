@@ -3,7 +3,6 @@ package backlog
 import (
 	"context"
 	"fmt"
-	"github.com/pkg/errors"
 	"io"
 	"io/ioutil"
 	"log"
@@ -12,6 +11,8 @@ import (
 	"path"
 	"runtime"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 const (
@@ -25,12 +26,16 @@ type Client struct {
 	apiKey string
 
 	logger *log.Logger
+
+	UserAgent string
 }
 
 type requestOption struct {
 	params map[string]string
 	body   map[string]string
 }
+
+var userAgent = fmt.Sprintf("go-backlog/%s Go(%s)", version, runtime.Version())
 
 func NewClient(urlStr, apiKey string, logger *log.Logger) (*Client, error) {
 	if len(apiKey) == 0 {
@@ -52,10 +57,10 @@ func NewClient(urlStr, apiKey string, logger *log.Logger) (*Client, error) {
 		apiKey: apiKey,
 
 		logger: logger,
+
+		UserAgent: userAgent,
 	}, nil
 }
-
-var userAgent = fmt.Sprintf("orisano-backlog/%s (%s)", version, runtime.Version())
 
 func (c *Client) newRequest(ctx context.Context, method, spath string, opt *requestOption) (*http.Request, error) {
 	if ctx == nil {
@@ -93,7 +98,7 @@ func (c *Client) newRequest(ctx context.Context, method, spath string, opt *requ
 	}
 	req.URL.RawQuery = values.Encode()
 
-	req.Header.Set("User-Agent", userAgent)
+	req.Header.Set("User-Agent", c.UserAgent)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	req = req.WithContext(ctx)
