@@ -35,7 +35,7 @@ type requestOption struct {
 	body   map[string]string
 }
 
-var userAgent = fmt.Sprintf("go-backlog/%s Go(%s)", version, runtime.Version())
+var userAgent = fmt.Sprintf("%s go-backlog/%s", runtime.Version(), version)
 
 func NewClient(urlStr, apiKey string, logger *log.Logger) (*Client, error) {
 	if len(apiKey) == 0 {
