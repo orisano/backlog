@@ -1,6 +1,8 @@
 package backlog
 
-import "testing"
+import (
+	"testing"
+)
 
 func assertString(t *testing.T, name, actual, expected string) bool {
 	if actual != expected {
