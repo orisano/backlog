@@ -12,9 +12,14 @@ const (
 )
 
 type Project struct {
-	ID         int    `json:"id"`
-	ProjectKey string `json:"projectKey"`
-	Name       string `json:"name"`
+	ID                                int    `json:"id"`
+	ProjectKey                        string `json:"projectKey"`
+	Name                              string `json:"name"`
+	ChartEnabled                      bool   `json:"chartEnabled"`
+	SubtaskingEnabled                 bool   `json:"subtaskingEnabled"`
+	ProjectLeaderCanEditProjectLeader bool   `json:"projectLeaderCanEditProjectLeader"`
+	TextFormattingRule                string `json:"textFormattingRule"`
+	Archived                          bool   `json:"archived"`
 }
 
 type IssueType struct {
