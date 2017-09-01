@@ -11,9 +11,12 @@ const (
 )
 
 type User struct {
-	ID     int    `json:"id"`
-	UserID string `json:"userId"`
-	Name   string `json:"name"`
+	ID          int    `json:"id"`
+	UserID      string `json:"userId"`
+	Name        string `json:"name"`
+	RoleType    int    `json:"roleType"`
+	Lang        string `json:"lang"`
+	MailAddress string `json:"mailAddress"`
 }
 
 func (c *Client) GetMyself(ctx context.Context) (*User, error) {
