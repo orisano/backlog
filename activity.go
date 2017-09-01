@@ -1,6 +1,10 @@
 package backlog
 
-import "time"
+import (
+	"context"
+	"net/http"
+	"time"
+)
 
 const (
 	activitiesPath = "/api/v2/space/activities"
@@ -37,4 +41,12 @@ type Activity struct {
 
 	CreatedUser User      `json:"createdUser"`
 	Created     time.Time `json:"created"`
+}
+
+func (c *Client) GetActivities(ctx context.Context) ([]Activity, error) {
+	var activities []Activity
+	if err := c.get(ctx, activitiesPath, http.StatusOK, &activities); err != nil {
+		return nil, err
+	}
+	return activities, nil
 }
