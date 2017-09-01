@@ -6,8 +6,7 @@ import (
 )
 
 func TestParseUser(t *testing.T) {
-	rawJSON := []byte(
-		`{
+	rawJSON := []byte(`{
 	"id": 1,
     "userId": "admin",
     "name": "admin",

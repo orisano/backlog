@@ -6,8 +6,7 @@ import (
 )
 
 func TestParseSpace(t *testing.T) {
-	rawJSON := []byte(
-		`{
+	rawJSON := []byte(`{
     "spaceKey": "nulab",
     "name": "Nulab Inc.",
     "ownerId": 1,
