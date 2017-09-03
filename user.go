@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 	"path"
 )
 
@@ -32,6 +33,21 @@ func (c *Client) GetUser(ctx context.Context, userID int) (*User, error) {
 	spath := path.Join(usersPath, fmt.Sprint(userID))
 	var user User
 	if err := c.get(ctx, spath, http.StatusOK, &user); err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+func (c *Client) AddUser(ctx context.Context, userID, password, name, mailAddress string, roleType int) (*User, error) {
+	params := url.Values{}
+	params.Set("userId", userID)
+	params.Set("password", password)
+	params.Set("name", name)
+	params.Set("mailAddress", mailAddress)
+	params.Set("roleType", fmt.Sprint(roleType))
+
+	var user User
+	if err := c.post(ctx, usersPath, params, http.StatusCreated, &user); err != nil {
 		return nil, err
 	}
 	return &user, nil
