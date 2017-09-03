@@ -1,9 +1,7 @@
 package backlog
 
 import (
-	"io"
 	"net/url"
-	"strings"
 )
 
 func mergeValues(a, b url.Values) url.Values {
@@ -20,8 +18,4 @@ func mergeValues(a, b url.Values) url.Values {
 		}
 	}
 	return r
-}
-
-func encodeForm(form url.Values) io.Reader {
-	return strings.NewReader(form.Encode())
 }

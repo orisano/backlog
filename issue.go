@@ -33,10 +33,9 @@ func (c *Client) AddIssue(ctx context.Context, projectID int, summary string, is
 	required.Set("priorityId", fmt.Sprint(priorityID))
 
 	form := mergeValues(required, optional)
-	body := encodeForm(form)
 
 	var out AddIssueResponse
-	if err := c.doSimple(ctx, http.MethodPost, issuesPath, body, http.StatusCreated, &out); err != nil {
+	if err := c.post(ctx, issuesPath, form, http.StatusCreated, &out); err != nil {
 		return nil, err
 	}
 	return &out, nil
@@ -49,10 +48,9 @@ func (c *Client) AddIssueComment(ctx context.Context, issueID int, content strin
 	required.Set("content", content)
 
 	form := mergeValues(required, optional)
-	body := encodeForm(form)
 
 	var out AddIssueCommentResponse
-	if err := c.doSimple(ctx, http.MethodPost, spath, body, http.StatusCreated, &out); err != nil {
+	if err := c.post(ctx, spath, form, http.StatusCreated, &out); err != nil {
 		return nil, err
 	}
 	return &out, nil

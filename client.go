@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"path"
 	"runtime"
+	"strings"
 
 	"github.com/pkg/errors"
 )
@@ -142,8 +143,8 @@ func (c *Client) do(req *http.Request, expected int, out interface{}) error {
 	return nil
 }
 
-func (c *Client) doSimple(ctx context.Context, method, spath string, body io.Reader, expected int, out interface{}) error {
-	req, err := c.newRequest(ctx, method, spath, body)
+func (c *Client) get(ctx context.Context, spath string, expected int, out interface{}) error {
+	req, err := c.newRequest(ctx, http.MethodGet, spath, nil)
 	if err != nil {
 		return errors.Wrap(err, "request construct failed")
 	}
@@ -153,6 +154,16 @@ func (c *Client) doSimple(ctx context.Context, method, spath string, body io.Rea
 	return nil
 }
 
-func (c *Client) get(ctx context.Context, spath string, expected int, out interface{}) error {
-	return c.doSimple(ctx, http.MethodGet, spath, nil, expected, out)
+func (c *Client) post(ctx context.Context, spath string, form url.Values, expected int, out interface{}) error {
+	body := strings.NewReader(form.Encode())
+	req, err := c.newRequest(ctx, http.MethodPost, spath, body)
+	if err != nil {
+		return errors.Wrap(err, "request construct failed")
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	if err := c.do(req, expected, out); err != nil {
+		return errors.Wrap(err, "request failed")
+	}
+	return nil
 }
