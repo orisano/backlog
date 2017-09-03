@@ -19,6 +19,14 @@ type User struct {
 	MailAddress string `json:"mailAddress"`
 }
 
+func (c *Client) GetUsers(ctx context.Context) ([]User, error) {
+	var users []User
+	if err := c.get(ctx, usersPath, http.StatusOK, &users); err != nil {
+		return nil, err
+	}
+	return users, nil
+}
+
 func (c *Client) GetMyself(ctx context.Context) (*User, error) {
 	spath := path.Join(usersPath, "myself")
 	var user User
