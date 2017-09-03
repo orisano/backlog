@@ -12,6 +12,15 @@ const (
 	usersPath = "/api/v2/users"
 )
 
+const (
+	RoleAdmin = 1 + iota
+	RoleUser
+	RoleReporter
+	RoleViewer
+	RoleGuestReporter
+	RoleGuestViewer
+)
+
 type User struct {
 	ID          int    `json:"id"`
 	UserID      string `json:"userId"`
