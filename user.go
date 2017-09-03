@@ -2,6 +2,7 @@ package backlog
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"path"
 )
@@ -25,6 +26,15 @@ func (c *Client) GetUsers(ctx context.Context) ([]User, error) {
 		return nil, err
 	}
 	return users, nil
+}
+
+func (c *Client) GetUser(ctx context.Context, userID int) (*User, error) {
+	spath := path.Join(usersPath, fmt.Sprint(userID))
+	var user User
+	if err := c.get(ctx, spath, http.StatusOK, &user); err != nil {
+		return nil, err
+	}
+	return &user, nil
 }
 
 func (c *Client) GetMyself(ctx context.Context) (*User, error) {
