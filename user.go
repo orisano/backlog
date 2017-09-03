@@ -79,3 +79,12 @@ func (c *Client) GetUserActivities(ctx context.Context, userID int) ([]Activity,
 	}
 	return activities, nil
 }
+
+func (c *Client) GetUserReceivedStars(ctx context.Context, userID int) ([]Star, error) {
+	spath := path.Join(usersPath, fmt.Sprint(userID), "stars")
+	var stars []Star
+	if err := c.get(ctx, spath, http.StatusOK, &stars); err != nil {
+		return nil, err
+	}
+	return stars, nil
+}
