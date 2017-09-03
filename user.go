@@ -6,6 +6,9 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"time"
+
+	"github.com/pkg/errors"
 )
 
 const (
@@ -87,4 +90,24 @@ func (c *Client) GetUserReceivedStars(ctx context.Context, userID int) ([]Star, 
 		return nil, err
 	}
 	return stars, nil
+}
+
+func (c *Client) GetUserReceivedStarsCount(ctx context.Context, userID int, since, until time.Time) (*int, error) {
+	spath := path.Join(usersPath, fmt.Sprint(userID), "stars", "count")
+	req, err := c.newRequest(ctx, http.MethodGet, spath, nil)
+	if err != nil {
+		return nil, errors.Wrap(err, "request construct failed")
+	}
+	query := url.Values{}
+	query.Set("since", since.Format(time.RFC3339))
+	query.Set("until", until.Format(time.RFC3339))
+	req.URL.RawQuery = query.Encode()
+
+	var out struct {
+		Count int `json:"count"`
+	}
+	if err := c.do(req, http.StatusOK, &out); err != nil {
+		return nil, errors.Wrap(err, "request failed")
+	}
+	return &out.Count, nil
 }
