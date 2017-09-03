@@ -27,9 +27,9 @@ type DiskUsage struct {
 }
 
 func (c *Client) GetDiskUsage(ctx context.Context) (*DiskUsage, error) {
-	var out DiskUsage
-	if err := c.get(ctx, diskUsagePath, http.StatusOK, &out); err != nil {
+	var diskUsage DiskUsage
+	if err := c.get(ctx, diskUsagePath, http.StatusOK, &diskUsage); err != nil {
 		return nil, err
 	}
-	return &out, nil
+	return &diskUsage, nil
 }

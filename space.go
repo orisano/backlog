@@ -23,9 +23,9 @@ type Space struct {
 }
 
 func (c *Client) GetSpace(ctx context.Context) (*Space, error) {
-	var out Space
-	if err := c.get(ctx, spacePath, http.StatusOK, &out); err != nil {
+	var space Space
+	if err := c.get(ctx, spacePath, http.StatusOK, &space); err != nil {
 		return nil, err
 	}
-	return &out, nil
+	return &space, nil
 }
