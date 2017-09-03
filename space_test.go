@@ -30,10 +30,6 @@ func TestParseSpace(t *testing.T) {
 	assertString(t, "Timezone", space.Timezone, "Asia/Tokyo")
 	assertString(t, "ReportSendTime", space.ReportSendTime, "08:00:00")
 	assertString(t, "TextFormattingRule", space.TextFormattingRule, "markdown")
-	assertInt(t, "Created#Year", space.Created.Year(), 2008)
-	assertInt(t, "Created#Month", int(space.Created.Month()), 7)
-	assertInt(t, "Created#Day", space.Created.Day(), 6)
-	assertInt(t, "Updated#Year", space.Updated.Year(), 2013)
-	assertInt(t, "Updated#Month", int(space.Updated.Month()), 6)
-	assertInt(t, "Updated#Day", space.Updated.Day(), 18)
+	assertTime(t, "Created", space.Created, 2008, 7, 6)
+	assertTime(t, "Updated", space.Updated, 2013, 6, 18)
 }

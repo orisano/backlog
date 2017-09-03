@@ -17,7 +17,5 @@ func TestParseNotification(t *testing.T) {
 	}
 
 	assertString(t, "Content", notification.Content, "Notification")
-	assertInt(t, "Update#Year", notification.Updated.Year(), 2013)
-	assertInt(t, "Update#Month", int(notification.Updated.Month()), 6)
-	assertInt(t, "Update#Day", notification.Updated.Day(), 18)
+	assertTime(t, "Updated", notification.Updated, 2013, 6, 18)
 }

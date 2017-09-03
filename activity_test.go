@@ -93,7 +93,5 @@ func TestParseActivity(t *testing.T) {
 	assertInt(t, "Notifications[0]#User#ID", activity.Notifications[0].User.ID, 5686)
 	assertBool(t, "Notifications[0]#ResourceAlreadyRead", activity.Notifications[0].ResourceAlreadyRead, true)
 	assertInt(t, "CreatedUser", activity.CreatedUser.ID, 1)
-	assertInt(t, "Created#Year", activity.Created.Year(), 2013)
-	assertInt(t, "Created#Month", int(activity.Created.Month()), 12)
-	assertInt(t, "Created#Day", activity.Created.Day(), 27)
+	assertTime(t, "Created", activity.Created, 2013, 12, 27)
 }
