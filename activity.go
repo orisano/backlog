@@ -10,6 +10,29 @@ const (
 	activitiesPath = "/api/v2/space/activities"
 )
 
+const (
+	ActivityIssueAdd = 1 + iota
+	ActivityIssueUpdate
+	ActivityIssueComment
+	ActivityIssueDelete
+	ActivityWikiAdd
+	ActivityWikiUpdate
+	ActivityWikiDelete
+	ActivityShareFileAdd
+	ActivityShareFileUpdate
+	ActivityShareFileDelete
+	ActivitySubversionCommit
+	ActivityGitPush
+	ActivityGitRepositoryCreate
+	ActivityIssueBulkUpdate
+	ActivityProjectJoin
+	ActivityProjectLeave
+	ActivityCommentNotificationAdd
+	ActivityPullRequestAdd
+	ActivityPullRequestUpdate
+	ActivityPullRequestComment
+)
+
 type Activity struct {
 	ID      int     `json:"id"`
 	Project Project `json:"project"`
