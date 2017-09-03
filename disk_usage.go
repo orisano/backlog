@@ -1,5 +1,10 @@
 package backlog
 
+import (
+	"context"
+	"net/http"
+)
+
 const (
 	diskUsagePath = "/api/v2/space/diskUsage"
 )
@@ -19,4 +24,12 @@ type DiskUsage struct {
 		Subversion int `json:"subversion"`
 		Git        int `json:"git"`
 	} `json:"details"`
+}
+
+func (c *Client) GetDiskUsage(ctx context.Context) (*DiskUsage, error) {
+	var out DiskUsage
+	if err := c.get(ctx, diskUsagePath, http.StatusOK, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
 }
