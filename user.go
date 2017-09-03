@@ -70,3 +70,12 @@ func (c *Client) GetMyself(ctx context.Context) (*User, error) {
 	}
 	return &user, nil
 }
+
+func (c *Client) GetUserActivities(ctx context.Context, userID int) ([]Activity, error) {
+	spath := path.Join(usersPath, fmt.Sprint(userID), "activities")
+	var activities []Activity
+	if err := c.get(ctx, spath, http.StatusOK, &activities); err != nil {
+		return nil, err
+	}
+	return activities, nil
+}
