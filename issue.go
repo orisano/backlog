@@ -12,6 +12,14 @@ const (
 	issuesPath = "/api/v2/issues"
 )
 
+type IssueType struct {
+	ID           int    `json:"id"`
+	ProjectID    int    `json:"projectId"`
+	Name         string `json:"name"`
+	Color        string `json:"color"`
+	DisplayOrder int    `json:"displayOrder"`
+}
+
 type AddIssueOption struct {
 	Description string
 	AssigneeID  int
